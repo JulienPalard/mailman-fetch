@@ -12,10 +12,13 @@ from urllib.parse import urljoin
 import requests
 from dateutil.parser import parse
 
+__version__ = "0.1.0"
 logger = logging.getLogger(__name__)
 
 
 def parse_args():
+    """Parse command line arguments.
+    """
     parser = argparse.ArgumentParser(description="Download a whole mailman archive.")
     parser.add_argument("archive_url")
     parser.add_argument(
@@ -34,6 +37,8 @@ def parse_args():
 
 
 def download(archive_url, local_directory, stop_at_first_unmodified=True):
+    """Download mailman archives at archive_url into local_directory.
+    """
     archives = requests.get(archive_url).text
     gzip_names = re.findall('"[0-9A-Za-z-]+.txt.gz"', archives)
     logging.debug("Downloading archives... found %d months...", len(gzip_names))
@@ -72,6 +77,8 @@ def download(archive_url, local_directory, stop_at_first_unmodified=True):
 
 
 def main():
+    """CLI script entry point.
+    """
     args = parse_args()
     logging.basicConfig(level=args.level)
     logging.getLogger("urllib3").level = logging.INFO
