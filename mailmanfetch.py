@@ -76,7 +76,7 @@ def main():
     logging.basicConfig(level=args.level)
     logging.getLogger("urllib3").level = logging.INFO
     if not args.local_directory.exists():
-        local_directory.mkdir(parents=True, exist_ok=True)
+        args.local_directory.mkdir(parents=True, exist_ok=True)
     download(args.archive_url, args.local_directory)
 
 
