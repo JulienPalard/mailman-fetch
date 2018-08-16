@@ -48,7 +48,10 @@ def download(archive_url, local_directory, stop_at_first_unmodified=True):
             .astimezone(timezone.utc)
             .replace(tzinfo=None)
         )
-        mtime = datetime.fromtimestamp(os.path.getmtime(local_directory / txt_name))
+        try:
+            mtime = datetime.fromtimestamp(os.path.getmtime(local_directory / txt_name))
+        except FileNotFoundError:
+            mtime = datetime.min
         logging.debug(
             "%s %s (remote mtime: %s, local mtime: %s)",
             "Downloading" if last_modified > mtime else "Skipping",
