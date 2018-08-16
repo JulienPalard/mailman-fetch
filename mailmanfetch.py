@@ -48,7 +48,9 @@ def download(archive_url, local_directory, stop_at_first_unmodified=True):
             .replace(tzinfo=None)
         )
         try:
-            mtime = datetime.fromtimestamp(os.path.getmtime(local_directory / txt_name))
+            mtime = datetime.fromtimestamp(
+                os.path.getmtime(str(local_directory / txt_name))
+            )
         except FileNotFoundError:
             mtime = datetime.min
         logging.debug(
@@ -59,7 +61,7 @@ def download(archive_url, local_directory, stop_at_first_unmodified=True):
             mtime,
         )
         if last_modified > mtime:
-            with open(local_directory / txt_name, "wb") as f:
+            with open(str(local_directory / txt_name), "wb") as f:
                 f.write(
                     gzip.decompress(
                         requests.get(urljoin(archive_url, gzip_name)).content
