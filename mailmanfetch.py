@@ -34,7 +34,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def download(archive_url, local_directory):
+def download(archive_url, local_directory, stop_at_first_unmodified=True):
     archives = requests.get(archive_url).text
     gzip_names = re.findall('"[0-9A-Za-z-]+.txt.gz"', archives)
     logging.debug("Downloading archives... found %d months...", len(gzip_names))
@@ -63,6 +63,8 @@ def download(archive_url, local_directory):
                         requests.get(urljoin(archive_url, gzip_name)).content
                     )
                 )
+        elif stop_at_first_unmodified:
+            return
 
 
 def main():
