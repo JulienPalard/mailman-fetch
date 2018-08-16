@@ -7,7 +7,6 @@ import os.path
 import re
 from datetime import datetime, timezone
 from pathlib import Path
-from subprocess import run
 from urllib.parse import urljoin
 
 import requests
