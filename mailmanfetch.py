@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+"""Short program to help mirroring GNU Mailman archives.
+"""
+
 import argparse
 import gzip
 import logging
