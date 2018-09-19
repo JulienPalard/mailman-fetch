@@ -15,7 +15,7 @@ from urllib.parse import urljoin
 import requests
 from dateutil.parser import parse
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 logger = logging.getLogger(__name__)
 
 
@@ -26,6 +26,13 @@ def parse_args():
     parser.add_argument("archive_url")
     parser.add_argument(
         "local_directory", type=Path, help="Local directory to store the archives."
+    )
+    parser.add_argument(
+        "-n",
+        "--numeric",
+        action="store_true",
+        help="Use numeric months instead of their names. "
+        "It helps as it's naturally ordered.",
     )
     parser.add_argument(
         "-v",
@@ -39,7 +46,31 @@ def parse_args():
     return parser.parse_args()
 
 
-def download(archive_url, local_directory, stop_at_first_unmodified=True):
+def replace_month_name_to_number(txt_name):
+    """In a mailman archive file name, like "2018-January.txt", replace
+    the month, "January", by its numerical value, "01".
+    """
+    months = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+    ]
+    year, month_name, ext = re.split("[.-]", txt_name)
+    return "{}-{:02d}.{}".format(year, months.index(month_name) + 1, ext)
+
+
+def download(
+    archive_url, local_directory, numeric=False, stop_at_first_unmodified=True
+):
     """Download mailman archives at archive_url into local_directory.
     """
     archives = requests.get(archive_url).text
@@ -48,6 +79,8 @@ def download(archive_url, local_directory, stop_at_first_unmodified=True):
     for gzip_name in gzip_names:
         gzip_name = gzip_name[1:-1]
         txt_name = gzip_name.replace(".txt.gz", ".txt")
+        if numeric:
+            txt_name = replace_month_name_to_number(txt_name)
         last_modified = (
             parse(
                 requests.head(urljoin(archive_url, gzip_name)).headers["Last-Modified"]
@@ -87,7 +120,7 @@ def main():
     logging.getLogger("urllib3").level = logging.INFO
     if not args.local_directory.exists():
         args.local_directory.mkdir(parents=True, exist_ok=True)
-    download(args.archive_url, args.local_directory)
+    download(args.archive_url, args.local_directory, args.numeric)
 
 
 if __name__ == "__main__":
