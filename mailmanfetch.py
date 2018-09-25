@@ -15,7 +15,7 @@ from urllib.parse import urljoin
 import requests
 from dateutil.parser import parse
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 logger = logging.getLogger(__name__)
 
 
@@ -43,6 +43,7 @@ def parse_args():
         const=logging.DEBUG,
         default=logging.INFO,
     )
+    parser.add_argument("-a", "--all", help="Recrawl all history", action="store_true")
     return parser.parse_args()
 
 
@@ -81,27 +82,30 @@ def download(
         txt_name = gzip_name.replace(".txt.gz", ".txt")
         if numeric:
             txt_name = replace_month_name_to_number(txt_name)
-        last_modified = (
-            parse(
-                requests.head(urljoin(archive_url, gzip_name)).headers["Last-Modified"]
+        if stop_at_first_unmodified:
+            last_modified = (
+                parse(
+                    requests.head(urljoin(archive_url, gzip_name)).headers[
+                        "Last-Modified"
+                    ]
+                )
+                .astimezone(timezone.utc)
+                .replace(tzinfo=None)
             )
-            .astimezone(timezone.utc)
-            .replace(tzinfo=None)
-        )
-        try:
-            mtime = datetime.fromtimestamp(
-                os.path.getmtime(str(local_directory / txt_name))
+            try:
+                mtime = datetime.fromtimestamp(
+                    os.path.getmtime(str(local_directory / txt_name))
+                )
+            except FileNotFoundError:
+                mtime = datetime.min
+            logging.debug(
+                "%s %s (remote mtime: %s, local mtime: %s)",
+                "Downloading" if last_modified > mtime else "Skipping",
+                gzip_name,
+                last_modified,
+                mtime,
             )
-        except FileNotFoundError:
-            mtime = datetime.min
-        logging.debug(
-            "%s %s (remote mtime: %s, local mtime: %s)",
-            "Downloading" if last_modified > mtime else "Skipping",
-            gzip_name,
-            last_modified,
-            mtime,
-        )
-        if last_modified > mtime:
+        if not stop_at_first_unmodified or last_modified > mtime:
             with open(str(local_directory / txt_name), "wb") as f:
                 f.write(
                     gzip.decompress(
@@ -120,7 +124,7 @@ def main():
     logging.getLogger("urllib3").level = logging.INFO
     if not args.local_directory.exists():
         args.local_directory.mkdir(parents=True, exist_ok=True)
-    download(args.archive_url, args.local_directory, args.numeric)
+    download(args.archive_url, args.local_directory, args.numeric, not args.all)
 
 
 if __name__ == "__main__":

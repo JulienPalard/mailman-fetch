@@ -21,7 +21,7 @@ setup(
     long_description_content_type="text/markdown",
     name="mailman-fetch",
     py_modules=["mailmanfetch"],
-    version="0.1.1",
+    version="0.1.2",
     install_requires=["requests", "python-dateutil"],
     extras_require={"dev": ["pylint", "black"]},
     entry_points={"console_scripts": ["mailman-fetch=mailmanfetch:main"]},
